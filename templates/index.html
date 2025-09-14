@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TimeLess</title>
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <!-- Header with Logo & Dark Mode Toggle -->
+    <header class="site-header">
+      <div class="logo-container">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="logo" />
+        <span class="site-name">TimeLess</span>
+      </div>
+      <button id="darkModeToggle" class="dark-mode-toggle" onclick="toggleDarkMode()">🌙</button>
+    </header>
+    
+    <div class="container">
+      <!-- Left Panel: Video Feed -->
+      <div class="left-panel">
+        <div class="video-wrapper">
+          <img src="{{ url_for('video_feed') }}" id="video-feed" alt="Video Feed" />
+        </div>
+        <button class="capture-button" onclick="captureImage()">📸 Capture</button>
+      </div>
+      
+      <!-- Right Panel: Tabbed List for Necklaces, Earrings & Nose Pins -->
+      <div class="right-panel">
+        <div class="list-tabs">
+          <button class="tab-button active" onclick="switchTab('necklaces')">Necklaces</button>
+          <button class="tab-button" onclick="switchTab('earrings')">Earrings</button>
+          <button class="tab-button" onclick="switchTab('nosepins')">Nose Rings</button>
+        </div>
+        <div class="tab-content active" id="necklaces">
+          {% for jewelry, details in jewelry_items.items() %}
+          <div class="item-card">
+            <img src="{{ url_for('static', filename=details.image) }}" class="item-image" alt="{{ details.name }}" />
+            <div class="item-info">
+              <h3 class="item-name">{{ details.name }}</h3>
+              <p class="item-description">{{ details.description }}</p>
+              <p class="item-price">{{ details.price }}</p>
+            </div>
+            <button class="try-button" onclick="selectJewelry('{{ jewelry }}')">Try On</button>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="tab-content" id="earrings">
+          {% for earring, details in earring_items.items() %}
+          <div class="item-card">
+            <img src="{{ url_for('static', filename=details.image) }}" class="item-image" alt="{{ details.name }}" />
+            <div class="item-info">
+              <h3 class="item-name">{{ details.name }}</h3>
+              <p class="item-description">{{ details.description }}</p>
+              <p class="item-price">{{ details.price }}</p>
+            </div>
+            <button class="try-button" onclick="selectEarring('{{ earring }}')">Try On</button>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="tab-content" id="nosepins">
+          {% for nosepin, details in nose_pin_items.items() %}
+          <div class="item-card">
+            <img src="{{ url_for('static', filename=details.image) }}" class="item-image" alt="{{ details.name }}" />
+            <div class="item-info">
+              <h3 class="item-name">{{ details.name }}</h3>
+              <p class="item-description">{{ details.description }}</p>
+              <p class="item-price">{{ details.price }}</p>
+            </div>
+            <button class="try-button" onclick="selectNosepin('{{ nosepin }}')">Try On</button>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    
+    <script>
+      // Capture snapshot from the video feed
+      function captureImage(){
+        const videoFeed = document.getElementById("video-feed");
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        canvas.width = videoFeed.clientWidth;
+        canvas.height = videoFeed.clientHeight;
+        context.drawImage(videoFeed, 0, 0, canvas.width, canvas.height);
+        const dataURL = canvas.toDataURL("image/png");
+        const link = document.createElement("a");
+        link.href = dataURL;
+        link.download = "captured_jewelry.png";
+        link.click();
+      }
+      
+      // Send AJAX request to change the necklace overlay
+      function selectJewelry(jewelryName) {
+        fetch("/change_jewelry", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ jewelry: jewelryName })
+        });
+      }
+      
+      // Send AJAX request to change the earring overlay
+      function selectEarring(earringName) {
+        fetch("/change_earring", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ earring: earringName })
+        });
+      }
+      
+      // Send AJAX request to change the nose pin overlay
+      function selectNosepin(nosepinName) {
+        fetch("/change_nosepin", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ nosepin: nosepinName })
+        });
+      }
+      
+      // Dark Mode Toggle Function
+      function toggleDarkMode(){
+        document.body.classList.toggle('dark-mode');
+        const toggle = document.getElementById("darkModeToggle");
+        if(document.body.classList.contains('dark-mode')){
+          toggle.textContent = "☀️";
+        } else {
+          toggle.textContent = "🌙";
+        }
+      }
+      
+      // Tab Switching Function for the List Panel
+      function switchTab(tabName) {
+        const tabs = document.querySelectorAll(".tab-content");
+        const buttons = document.querySelectorAll(".list-tabs .tab-button");
+        tabs.forEach(tab => {
+          tab.classList.remove("active");
+        });
+        buttons.forEach(btn => {
+          btn.classList.remove("active");
+        });
+        document.getElementById(tabName).classList.add("active");
+        // Activate the button whose text matches tabName (case insensitive)
+        buttons.forEach(btn => {
+          if(btn.textContent.trim().toLowerCase() === tabName.toLowerCase()){
+            btn.classList.add("active");
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
